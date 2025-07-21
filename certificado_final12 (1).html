@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>AC-BWM - Porto de Santos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root { --primary-color:#005f73; --accent-color:#0a9396; --bg-color:#e9ecef; --card-bg:#ffffff; --text-color:#001219; }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:'Roboto',sans-serif;}
+    body{background:var(--bg-color);color:var(--text-color);}
+    .container{max-width:900px;margin:40px auto;padding:20px;}
+    .card{background:var(--card-bg);border-radius:8px;box-shadow:0 4px 10px rgba(0,0,0,0.1);padding:30px;margin-bottom:20px;}
+    h1,h2{color:var(--primary-color);margin-bottom:20px;}
+    label{display:block;margin:10px 0 5px;font-weight:500;}
+    input,select,textarea,button{width:100%;padding:8px;margin-bottom:15px;border:1px solid #ccc;border-radius:4px;}
+    button{background:var(--accent-color);color:#fff;border:none;cursor:pointer;}
+    button:hover{background:var(--primary-color);}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;}
+    .full{grid-column:1/-1;}
+    #form-section,#list-section{display:none;}
+    #cert-list{list-style:none;padding:0;}
+    #cert-list li{display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #ccc;}
+    .cert-info{font-weight:500;}
+    .btn-lupa{font-size:1.2rem;background:none;border:none;cursor:pointer;}
+    .logo-center{text-align:center;margin-bottom:20px;}
+    .logo-center img{max-width:200px;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Login -->
+    <div id="login-section" class="card">
+      <div class="logo-center"><img src="mavit-logo.png" alt="MAV.IT"/></div>
+      <h1>Login</h1>
+      <label for="user">Usuário:</label><input type="text" id="user" placeholder="Usuário"/>
+      <label for="pass">Senha:</label><input type="password" id="pass" placeholder="Senha"/>
+      <button type="button" onclick="login()">Entrar</button>
+    </div>
+
+    <!-- Formulário completo -->
+    <div id="form-section" class="card">
+      <div class="logo-center"><img src="mavit-logo.png" alt="MAV.IT"/></div>
+      <h1>Certificação de Conformidade de Água de Lastro (AC‑BWM)</h1>
+      <form id="certForm">
+        <!-- 1. Dados do Certificado -->
+        <h2>1. Dados do Certificado</h2>
+        <div class="grid">
+          <div><label>Número do Certificado:</label><input type="text" name="numero" required/></div>
+          <div><label>Data de Emissão:</label><input type="date" name="dataEmissao" required/></div>
+          <div class="full"><label>Local de Emissão:</label><input type="text" name="localEmissao" required/></div>
+        </div>
+
+        <!-- 2. Empresa Credenciada -->
+        <h2>2. Empresa Credenciada</h2>
+        <div class="grid">
+          <div><label>Nome da Empresa:</label><input type="text" name="empresaNome" required/></div>
+          <div><label>Nº de Credenciamento SUMAS:</label><input type="text" name="empresaCredSumas" required/></div>
+          <div class="full"><label>Endereço Completo:</label><input type="text" name="empresaEndereco" required/></div>
+          <div class="full"><label>Telefone / E‑mail:</label><input type="text" name="empresaContato" required/></div>
+        </div>
+
+        <!-- 3. Identificação do Navio -->
+        <h2>3. Identificação do Navio</h2>
+        <div class="grid">
+          <div><label>Nome do Navio:</label><input type="text" name="navioNome" required/></div>
+          <div><label>IMO Number:</label><input type="text" name="navioImo" required/></div>
+          <div><label>Indicativo de Chamada:</label><input type="text" name="navioIndicativo" required/></div>
+          <div><label>Bandeira:</label><input type="text" name="navioBandeira" required/></div>
+          <div><label>Porto de Origem:</label><input type="text" name="navioOrigem" required/></div>
+          <div><label>Porto de Destino:</label><input type="text" name="navioDestino" required/></div>
+          <div><label>Data/Hora de Entrada:</label><input type="datetime-local" name="navioEntrada" required/></div>
+          <div><label>Data/Hora de Saída:</label><input type="datetime-local" name="navioSaida" required/></div>
+        </div>
+
+        <!-- 4. Detalhes da Amostragem -->
+        <h2>4. Detalhes da Amostragem</h2>
+        <div class="grid">
+          <div><label>Tanque(s) Amostrado(s):</label><input type="text" name="amostraTanque" required/></div>
+          <div><label>Volume Amostrado (L):</label><input type="number" name="amostraVolume" step="0.01" required/></div>
+          <div><label>Salinidade (ppt):</label><input type="number" name="amostraSalinidade" step="0.01" required/></div>
+          <div><label>Temperatura (°C):</label><input type="number" name="amostraTemperatura" step="0.1" required/></div>
+          <div><label>Turbidez (NTU):</label><input type="number" name="amostraTurbidez" step="0.1" required/></div>
+          <div><label>Data/Hora da Amostragem:</label><input type="datetime-local" name="amostraDataHora" required/></div>
+          <div class="full"><label>Local da Amostragem (tanque):</label><input type="text" name="amostraLocal" required/></div>
+        </div>
+
+        <!-- 5. Resultados Analíticos -->
+        <h2>5. Resultados Analíticos</h2>
+        <div class="grid">
+          <div><label>Organismos &gt;50 µm (ind./mL):</label><input type="number" name="res_gt50" step="0.01" required/></div>
+          <div><label>Conforme?</label><select name="res_gt50Conforme" required><option>Sim</option><option>Não</option></select></div>
+          <div><label>Organismos 10–50 µm (ind./mL):</label><input type="number" name="res_10_50" step="0.01" required/></div>
+          <div><label>Conforme?</label><select name="res_10_50Conforme" required><option>Sim</option><option>Não</option></select></div>
+          <div><label>Colônias de Algas (ind./mL):</label><input type="number" name="res_algas" step="0.01" required/></div>
+          <div><label>Conforme?</label><select name="res_algasConforme" required><option>Sim</option><option>Não</option></select></div>
+          <div><label>Enterococos (ind./100 mL):</label><input type="number" name="res_enterococos" step="0.01" required/></div>
+          <div><label>Conforme?</label><select name="res_enterococosConforme" required><option>Sim</option><option>Não</option></select></div>
+          <div><label>Escherichia coli (ind./100 mL):</label><input type="number" name="res_ecoli" step="0.01" required/></div>
+          <div><label>Conforme?</label><select name="res_ecoliConforme" required><option>Sim</option><option>Não</option></select></div>
+          <div><label>Turbidez (NTU):</label><input type="number" name="res_turbidez" step="0.1" required/></div>
+          <div><label>Conforme?</label><select name="res_turbidezConforme" required><option>Sim</option><option>Não</option></select></div>
+        </div>
+
+        <!-- Evidências -->
+        <label>Evidências (fotos):</label><input type="file" id="evidencias" name="evidencias" accept="image/*" multiple/>
+
+        <!-- 6. Conformidade Geral -->
+        <h2>6. Conformidade Geral</h2>
+        <label>Status:</label><select name="statusGeral" required><option>Conforme</option><option>Não Conforme</option></select>
+        <label>Observações / Ações Corretivas:</label><textarea name="observacoes" rows="3"></textarea>
+
+        <!-- 7. Declaração do Responsável Técnico -->
+        <h2>7. Declaração do Responsável Técnico</h2>
+        <div class="grid">
+          <div><label>Nome do Técnico:</label><input type="text" name="tecNome" required/></div>
+          <div><label>Registro Profissional:</label><input type="text" name="tecRegistro" required/></div>
+          <div><label>Data:</label><input type="date" name="tecData" required/></div>
+        </div>
+        <label>Assinatura:</label><input type="text" name="tecAssinatura" required/>
+
+        <!-- 8. Aprovação SUMAS -->
+        <h2>8. Aprovação da Autoridade Portuária (SUMAS)</h2>
+        <div class="grid">
+          <div><label>Nome do Fiscal:</label><input type="text" name="sumaNome" required/></div>
+          <div><label>Data:</label><input type="date" name="sumaData" required/></div>
+        </div>
+        <label>Assinatura:</label><input type="text" name="sumaAssinatura" required/>
+
+        <!-- Botões -->
+        <div class="full"><button type="submit">Salvar Localmente</button></div>
+        <div class="full grid" style="grid-template-columns:1fr 1fr">
+          <button type="button" onclick="showList()">Consultar Certificados</button>
+          <button type="button" onclick="generateLastPDF()">Gerar PDF</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Consulta -->
+    <div id="list-section" class="card">
+      <h2>Certificados Gerados</h2>
+      <ul id="cert-list"></ul>
+    </div>
+  </div>
+
+  <script>
+    let isLoggedIn = false;
+    function login() {
+      if (document.getElementById('user').value==='admin' && document.getElementById('pass').value==='admin123') {
+        isLoggedIn=true;
+        document.getElementById('login-section').style.display='none';
+        document.getElementById('form-section').style.display='block';
+      } else alert('Credenciais incorretas');
+    }
+
+    document.getElementById('certForm').addEventListener('submit', async function(e) {
+      if(!isLoggedIn){ alert('Faça login'); return; }
+      e.preventDefault();
+      const data={}; new FormData(this).forEach((v,k)=>data[k]=v);
+      data.timestamp=new Date().toLocaleString();
+      data.evidencias=[]; 
+      for(let f of this.evidencias.files){
+        data.evidencias.push(await new Promise((res,rej)=>{
+          const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=err=>rej(err); r.readAsDataURL(f);
+        }));
+      }
+      const list=JSON.parse(localStorage.getItem('certificados')||'[]'); list.push(data);
+      localStorage.setItem('certificados',JSON.stringify(list));
+      alert('Salvo!');
+      this.reset();
+    });
+
+    function showList(){
+      if(!isLoggedIn){ alert('Faça login'); return; }
+      const list=JSON.parse(localStorage.getItem('certificados')||'[]');
+      const ul=document.getElementById('cert-list'); ul.innerHTML='';
+      list.forEach((item,i)=>{
+        const li=document.createElement('li');
+        const span=document.createElement('span'); span.className='cert-info';
+        span.textContent=item.numero+' — '+item.timestamp;
+        const btn=document.createElement('button'); btn.className='btn-lupa'; btn.title='Baixar PDF'; btn.innerHTML='🔍';
+        btn.onclick=()=>generatePDFFor(i);
+        li.append(span,btn); ul.appendChild(li);
+      });
+      document.getElementById('list-section').style.display='block';
+    }
+
+    async function generatePDFFor(idx){
+      if(!isLoggedIn){ alert('Faça login'); return; }
+      const list=JSON.parse(localStorage.getItem('certificados')||'[]'); const data=list[idx];
+      const container=document.createElement('div'); container.style.position='absolute'; container.style.top='-10000px';
+      let html=`<div class="card"><div class="logo-center"><img src="mavit-logo.png"/></div><h1>Certificação AC-BWM</h1>`;
+      for(const [k,v] of Object.entries(data)){
+        if(k==='evidencias'||k==='timestamp') continue;
+        html+=`<p><strong>${k.replace(/([A-Z])/g,' $1')}:</strong> ${v}</p>`;
+      }
+      if(data.evidencias.length){
+        html+=`<div><strong>Evidências:</strong><br>`;
+        data.evidencias.forEach(src=>html+=`<img src="${src}" style="max-width:100px;margin:5px"/>`);
+        html+=`</div>`;
+      }
+      html+=`<p><strong>Gerado em:</strong> ${data.timestamp}</p></div>`;
+      container.innerHTML=html; document.body.appendChild(container);
+      const { jsPDF }=window.jspdf; const doc=new jsPDF({unit:'pt',format:'a4'});
+      await doc.html(container,{x:20,y:20,html2canvas:{scale:0.6,useCORS:true},
+        callback:pdf=>{pdf.save(`certificado-${data.numero}.pdf`);document.body.removeChild(container);},
+        margin:[20,20,20,20],autoPaging:'text'
+      });
+    }
+
+    function generateLastPDF(){
+      if(!isLoggedIn){ alert('Faça login'); return; }
+      const list=JSON.parse(localStorage.getItem('certificados')||'[]');
+      if(list.length) generatePDFFor(list.length-1);
+      else alert('Nenhum certificado');
+    }
+  </script>
+</body>
+</html>
