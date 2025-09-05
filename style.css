@@ -136,7 +136,7 @@ body{
   height: 100%;
   width: 0%;
   background-color: var(--accent);
-  transition: width 0.5s linear;
+  /* A TRANSIÇÃO FOI REMOVIDA DAQUI PARA NÃO CONFLITAR COM O JAVASCRIPT */
   border-radius: 99px;
 }
 
