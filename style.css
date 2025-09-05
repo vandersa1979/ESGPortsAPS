@@ -27,6 +27,40 @@ body{
   text-rendering: optimizeLegibility;
 }
 
+/* --- ESTILOS DO POPUP DE CARREGAMENTO --- */
+.loading-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(12, 20, 45, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  display: none; /* Inicia oculto */
+}
+.loading-modal-content {
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid var(--bg);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* ESTRUTURA DA PÁGINA COM SIDEBAR */
 .page-wrapper{display:flex;height:100vh}
 .sidebar{width:var(--sidebar-width);background:var(--card);border-right:1px solid var(--border-color);display:flex;flex-direction:column;padding:24px;flex-shrink:0}
@@ -98,47 +132,5 @@ body{
 .sigStamp{font-size:12px;color:#22305f;margin-top:4px}
 .sigGov{display:inline-block;margin-top:8px;padding:6px 12px;border-radius:10px;border:1px dashed rgba(28,30,135,.35);font-size:12px;color:var(--primary);background:rgba(28,30,135,.05);font-weight:700;letter-spacing:.2px}
 
-/* PAINEL DE CARREGAMENTO INFERIOR */
-.bottom-loader-container {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: var(--primary);
-  color: white;
-  z-index: 1000;
-  padding: 20px 30px;
-  box-shadow: 0 -4px 20px rgba(28, 30, 135, 0.25);
-  transform: translateY(100%);
-  transition: transform 0.4s ease-in-out;
-}
-.bottom-loader-container.visible {
-  transform: translateY(0);
-}
-.bottom-loader-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  text-align: center;
-}
-.bottom-loader-content p {
-  margin: 0 0 12px 0;
-  font-weight: 600;
-  font-size: 16px;
-}
-.bottom-loader-progress {
-  width: 100%;
-  height: 8px;
-  background-color: rgba(255, 255, 255, 0.25);
-  border-radius: 99px;
-  overflow: hidden;
-}
-#bottom-loader-bar {
-  height: 100%;
-  width: 0%;
-  background-color: var(--accent);
-  /* A TRANSIÇÃO FOI REMOVIDA DAQUI PARA NÃO CONFLITAR COM O JAVASCRIPT */
-  border-radius: 99px;
-}
-
 /* PRINT */
-@media print{@page{size:A4;margin:12mm}body{background:#fff}.no-print,.sidebar,.bottom-loader-container{display:none!important}.page-wrapper{display:block;height:auto}.main-content{overflow:visible}}
+@media print{@page{size:A4;margin:12mm}body{background:#fff}.no-print,.sidebar{display:none!important}.page-wrapper{display:block;height:auto}.main-content{overflow:visible}}
