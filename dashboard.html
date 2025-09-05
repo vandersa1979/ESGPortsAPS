@@ -206,25 +206,33 @@ function processar(){
   const btnProcessar = document.getElementById('btn_processar');
   const btnLimpar = document.getElementById('btn_limpar');
 
-  // Lógica corrigida para exibir o painel
   loader.classList.add('visible');
-
   statusEl.textContent = '';
   btnProcessar.disabled = true;
   btnLimpar.disabled = true;
   setProgress(0);
   
-  let progress = 0;
-  const interval = setInterval(() => {
-    progress += 100 / 10;
-    setProgress(progress);
-    if (progress >= 100) {
-      clearInterval(interval);
-    }
-  }, 1000);
+  // --- INÍCIO: NOVA LÓGICA DE ANIMAÇÃO DA BARRA ---
+  let startTime = null;
+  const duration = 10000; // 10 segundos
+  let animationFrameId;
+
+  function animationLoop(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const elapsedTime = timestamp - startTime;
+      const progress = Math.min((elapsedTime / duration) * 100, 100);
+      setProgress(progress);
+
+      if (elapsedTime < duration) {
+          animationFrameId = requestAnimationFrame(animationLoop);
+      }
+  }
+  animationFrameId = requestAnimationFrame(animationLoop);
+  // --- FIM: NOVA LÓGICA DE ANIMAÇÃO DA BARRA ---
 
   setTimeout(async () => {
     try {
+      cancelAnimationFrame(animationFrameId); // Para a animação
       const [t1,t2,t3,t4] = await Promise.all([
         readPdfFile(document.getElementById('file_ibwmc').files[0]),
         readPdfFile(document.getElementById('file_ibwms').files[0]),
@@ -250,7 +258,6 @@ function processar(){
       const ts = now.toLocaleString(undefined,{dateStyle:'short', timeStyle:'short', hour12:false});
       const payload = JSON.stringify({inputs, docs, findings, ts, approved});
       const enc = new TextEncoder().encode(payload);
-      // CORRIGIDO: SHA-256 é o padrão correto
       const buf = await crypto.subtle.digest('SHA-256', enc);
       const hashArr = Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
       
@@ -274,14 +281,14 @@ function processar(){
       window.location.href='minhas-requisicoes.html';
 
     } catch(err) {
+      cancelAnimationFrame(animationFrameId);
       loader.classList.remove('visible');
       statusEl.textContent='Falha na leitura ou processamento de algum PDF. Erro: ' + err.message;
       btnProcessar.disabled = false;
       btnLimpar.disabled = false;
-      clearInterval(interval);
       setProgress(0);
     }
-  }, 10000);
+  }, duration); // Usa a mesma variável de duração
 }
 
 function limpar(){
@@ -294,6 +301,9 @@ function limpar(){
   document.getElementById('file_ibwmp').value = '';
   document.getElementById('status').textContent='';
 }
+</script>
+</body>
+</html>
 </script>
 </body>
 </html>
