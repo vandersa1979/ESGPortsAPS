@@ -9,12 +9,6 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.111/pdf.worker.min.js"></script>
 </head>
 <body>
-  <div id="loading-modal" class="loading-modal-backdrop">
-    <div class="loading-modal-content">
-      <div class="loading-spinner"></div>
-      <p style="margin-top: 20px; color: var(--text);">comparativos sendo realizados por inteligencia artificial - aguarde</p>
-    </div>
-  </div>
   <div class="page-wrapper">
     <aside class="sidebar">
       <div class="brand"><div class="logoDot"></div><div class="brandText">MAV‑IT • BW COMP</div></div>
@@ -81,9 +75,16 @@
     </main>
   </div>
 
+  <div id="bottom-loader" class="bottom-loader-container">
+    <div class="bottom-loader-content">
+        <p id="bottom-loader-message">ANÁLISE COMPARATIVA COM INTELIGÊNCIA ARTIFICIAL</p>
+        <div class="bottom-loader-progress">
+            <div id="bottom-loader-bar"></div>
+        </div>
+    </div>
+  </div>
 
 <script>
-// --- INÍCIO DO BLOCO DE UTILIDADES ---
 if(!localStorage.getItem('usuarioLogado')) window.location.href='index.html';
 
 function getAccountEmail() {
@@ -105,9 +106,12 @@ function saveDb(db){
   const key = 'mav_it_data_' + getAccountEmail();
   localStorage.setItem(key, JSON.stringify(db));
 }
-// --- FIM DO BLOCO DE UTILIDADES ---
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.111/pdf.worker.min.js';
+
+function setProgress(p){ 
+  document.getElementById('bottom-loader-bar').style.width = p+'%'; 
+}
 
 function readPdfFile(file){
   return new Promise((resolve, reject) => {
@@ -175,12 +179,15 @@ function compareAll(inputs, docs){
     findings.push({ field, label, values: processedValues, valuesOriginal: originalValues, match, labels });
   }
   
-  add('shipName','Nome da Embarcação',[inputs.nome_embarcacao, docs.IBWMC?.shipName],['Digitado','IBWMC']);
+  // Comparação abrangente
+  add('shipName','Nome da Embarcação',[inputs.nome_embarcacao, docs.IBWMC?.shipName, docs.BWRF?.shipName, docs.IBWMP?.shipName],['Digitado','IBWMC','BWRF','IBWMP']);
   add('imo','IMO',[inputs.imo, docs.IBWMC?.imo],['Digitado','IBWMC']);
+  // Não há "porto de chegada" digitado, então a comparação é apenas informativa do que foi extraído
   add('arrivalPort','Porto de chegada',[docs.BWRF?.arrivalPort],['BWRF']);
   add('arrivalDate','Data de chegada',[docs.BWRF?.arrivalDate],['BWRF']);
-  add('totalOnBoard','Volume a bordo (m³)',[docs.BWRF?.totalOnBoard],['BWRF']);
-  add('totalToDischarge','Volume a descarregar (m³)',[docs.BWRF?.totalToDischarge],['BWRF']);
+  // Campos de volume não são mais comparados
+  // add('totalOnBoard','Volume a bordo (m³)',[docs.BWRF?.totalOnBoard],['BWRF']);
+  // add('totalToDischarge','Volume a descarregar (m³)',[docs.BWRF?.totalToDischarge],['BWRF']);
   add('method','Método (D-1/D-2)',[docs.IBWMC?.method, docs.IBWMP?.methodPrimary],['IBWMC','IBWMP']);
   add('manufacturer','Fabricante do BWMS',[docs.IBWMC?.manufacturer, docs.IBWMS?.manufacturer],['IBWMC','IBWMS']);
   return findings;
@@ -195,18 +202,36 @@ function processar(){
     }
   }
 
-  const modal = document.getElementById('loading-modal');
+  const loader = document.getElementById('bottom-loader');
   const statusEl = document.getElementById('status');
   const btnProcessar = document.getElementById('btn_processar');
   const btnLimpar = document.getElementById('btn_limpar');
 
-  modal.style.display = 'flex';
+  loader.classList.add('visible');
   statusEl.textContent = '';
   btnProcessar.disabled = true;
   btnLimpar.disabled = true;
+  setProgress(0);
+  
+  let startTime = null;
+  const duration = 10000;
+  let animationFrameId;
+
+  function animationLoop(timestamp) {
+      if (!startTime) startTime = timestamp;
+      const elapsedTime = timestamp - startTime;
+      const progress = Math.min((elapsedTime / duration) * 100, 100);
+      setProgress(progress);
+
+      if (elapsedTime < duration) {
+          animationFrameId = requestAnimationFrame(animationLoop);
+      }
+  }
+  animationFrameId = requestAnimationFrame(animationLoop);
 
   setTimeout(async () => {
     try {
+      cancelAnimationFrame(animationFrameId);
       const [t1,t2,t3,t4] = await Promise.all([
         readPdfFile(document.getElementById('file_ibwmc').files[0]),
         readPdfFile(document.getElementById('file_ibwms').files[0]),
@@ -221,7 +246,8 @@ function processar(){
         carga: document.getElementById('carga').value.trim(),
         tipo_gerenciamento: document.getElementById('tipo_gerenciamento').value,
         tipo_operacao: document.getElementById('tipo_operacao').value,
-        porto_chegada: d3.arrivalPort, data_chegada: d3.arrivalDate, volume_bordo: d3.totalOnBoard, volume_descarga: d3.totalToDischarge
+        porto_chegada: d3.arrivalPort, 
+        data_chegada: d3.arrivalDate
       };
       const docs={ IBWMC:d1, IBWMS:d2, BWRF:d3, IBWMP:d4 };
       const findings=compareAll(inputs,docs);
@@ -255,12 +281,14 @@ function processar(){
       window.location.href='minhas-requisicoes.html';
 
     } catch(err) {
-      modal.style.display = 'none';
+      cancelAnimationFrame(animationFrameId);
+      loader.classList.remove('visible');
       statusEl.textContent='Falha na leitura ou processamento de algum PDF. Erro: ' + err.message;
       btnProcessar.disabled = false;
       btnLimpar.disabled = false;
+      setProgress(0);
     }
-  }, 5000); // Atraso de 5000 milissegundos (5 segundos)
+  }, duration);
 }
 
 function limpar(){
