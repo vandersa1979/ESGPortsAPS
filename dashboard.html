@@ -7,51 +7,14 @@
 <link rel="stylesheet" href="style.css">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.111/pdf.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.111/pdf.worker.min.js"></script>
-<style>
-  /* ESTILOS DA BARRA DE CARREGAMENTO (INCORPORADOS PARA GARANTIR O FUNCIONAMENTO) */
-  .bottom-loader-container {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: #1C1E87; /* Cor primária */
-    color: white;
-    z-index: 1000;
-    padding: 20px 30px;
-    box-shadow: 0 -4px 20px rgba(28, 30, 135, 0.25);
-    transform: translateY(100%);
-    transition: transform 0.4s ease-in-out;
-  }
-  .bottom-loader-container.visible {
-    transform: translateY(0);
-  }
-  .bottom-loader-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    text-align: center;
-  }
-  .bottom-loader-content p {
-    margin: 0 0 12px 0;
-    font-weight: 600;
-    font-size: 16px;
-    font-family: 'Inter', sans-serif;
-  }
-  .bottom-loader-progress {
-    width: 100%;
-    height: 8px;
-    background-color: rgba(255, 255, 255, 0.25);
-    border-radius: 99px;
-    overflow: hidden;
-  }
-  #bottom-loader-bar {
-    height: 100%;
-    width: 0%;
-    background-color: #F7C9AF; /* Cor de destaque */
-    border-radius: 99px;
-  }
-</style>
 </head>
 <body>
+  <div id="loading-modal" class="loading-modal-backdrop">
+    <div class="loading-modal-content">
+      <div class="loading-spinner"></div>
+      <p style="margin-top: 20px; color: var(--text);">comparativos sendo realizados por inteligencia artificial - aguarde</p>
+    </div>
+  </div>
   <div class="page-wrapper">
     <aside class="sidebar">
       <div class="brand"><div class="logoDot"></div><div class="brandText">MAV‑IT • BW COMP</div></div>
@@ -118,14 +81,6 @@
     </main>
   </div>
 
-  <div id="bottom-loader" class="bottom-loader-container">
-    <div class="bottom-loader-content">
-        <p id="bottom-loader-message">ANÁLISE COMPARATIVA COM INTELIGÊNCIA ARTIFICIAL</p>
-        <div class="bottom-loader-progress">
-            <div id="bottom-loader-bar"></div>
-        </div>
-    </div>
-  </div>
 
 <script>
 // --- INÍCIO DO BLOCO DE UTILIDADES ---
@@ -153,10 +108,6 @@ function saveDb(db){
 // --- FIM DO BLOCO DE UTILIDADES ---
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.111/pdf.worker.min.js';
-
-function setProgress(p){ 
-  document.getElementById('bottom-loader-bar').style.width = p+'%'; 
-}
 
 function readPdfFile(file){
   return new Promise((resolve, reject) => {
@@ -244,40 +195,18 @@ function processar(){
     }
   }
 
-  const loader = document.getElementById('bottom-loader');
+  const modal = document.getElementById('loading-modal');
   const statusEl = document.getElementById('status');
   const btnProcessar = document.getElementById('btn_processar');
   const btnLimpar = document.getElementById('btn_limpar');
 
-  loader.style.display = 'block';
-  setTimeout(() => {
-    loader.classList.add('visible');
-  }, 50);
-
+  modal.style.display = 'flex';
   statusEl.textContent = '';
   btnProcessar.disabled = true;
   btnLimpar.disabled = true;
-  setProgress(0);
-  
-  let startTime = null;
-  const duration = 10000;
-  let animationFrameId;
-
-  function animationLoop(timestamp) {
-      if (!startTime) startTime = timestamp;
-      const elapsedTime = timestamp - startTime;
-      const progress = Math.min((elapsedTime / duration) * 100, 100);
-      setProgress(progress);
-
-      if (elapsedTime < duration) {
-          animationFrameId = requestAnimationFrame(animationLoop);
-      }
-  }
-  animationFrameId = requestAnimationFrame(animationLoop);
 
   setTimeout(async () => {
     try {
-      cancelAnimationFrame(animationFrameId);
       const [t1,t2,t3,t4] = await Promise.all([
         readPdfFile(document.getElementById('file_ibwmc').files[0]),
         readPdfFile(document.getElementById('file_ibwms').files[0]),
@@ -326,15 +255,12 @@ function processar(){
       window.location.href='minhas-requisicoes.html';
 
     } catch(err) {
-      cancelAnimationFrame(animationFrameId);
-      loader.classList.remove('visible');
-      setTimeout(() => { loader.style.display = 'none'; }, 400);
+      modal.style.display = 'none';
       statusEl.textContent='Falha na leitura ou processamento de algum PDF. Erro: ' + err.message;
       btnProcessar.disabled = false;
       btnLimpar.disabled = false;
-      setProgress(0);
     }
-  }, duration);
+  }, 5000); // Atraso de 5000 milissegundos (5 segundos)
 }
 
 function limpar(){
